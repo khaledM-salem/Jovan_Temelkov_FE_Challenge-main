@@ -1,36 +1,68 @@
 import './MultiCheck.css';
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export type Option = {
-  label: string,
-  value: string
-}
+  label: string;
+  value: string;
+};
 
-/**
- * Notice:
- * 1. There should be a special `Select All` option with checkbox to control all passing options
- * 2. If columns > 1, the options should be placed from top to bottom in each column
- *
- * @param {string} label - the label text of this component
- * @param {Option[]} options - options
- * @param {string[]} values - default checked option values
- * @param {number} columns - default value is 1
- * @param {Function} onChange - when checked options are changed,
- *                             they should be passed to outside
- */
 type Props = {
-  label?: string,
-  options: Option[],
-  columns?: number,
-  values?: string[]
-  onChange?: (options: Option[]) => void,
-}
+  label?: string;
+  options: Option[];
+  columns?: number;
+  values?: string[];
+  onChange?: (options: Option[]) => void;
+};
 
-const MultiCheck: React.FunctionComponent<Props> = (props): JSX.Element => {
-  return <div className='MultiCheck'>
-    {/* TODO */}
-  </div>
-}
+const MultiCheck: React.FC<Props> = (props): JSX.Element => {
+  const { label, options, columns = 1, values = [], onChange } = props;
+
+  const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
+
+  useEffect(() => {
+    if (onChange) {
+      onChange(selectedOptions);
+    }
+  }, [selectedOptions, onChange]);
+
+  const toggleOption = (value: string): void => {
+    const updatedOptions = selectedOptions.some((opt) => opt.value === value)
+      ? selectedOptions.filter((opt) => opt.value !== value)
+      : [...selectedOptions, options.find((opt) => opt.value === value)!];
+
+    setSelectedOptions(updatedOptions);
+  };
+
+  const toggleAllOptions = (): void => {
+    const allOptionsSelected = selectedOptions.length === options.length;
+    const updatedOptions = allOptionsSelected ? [] : [...options];
+    setSelectedOptions(updatedOptions);
+  };
+
+  return (
+    <div className='MultiCheck'>
+      {label && <label className='title'>{label}</label>}
+      <div>
+        <label>
+          <input type='checkbox' checked={selectedOptions.length === options.length} onChange={toggleAllOptions} />
+          Select All
+        </label>
+      </div>
+      <div className='options-container' style={{ columns }}>
+        {options.map((option) => (
+          <label key={option.value}>
+            <input
+              type='checkbox'
+              value={option.value}
+              checked={selectedOptions.some((opt) => opt.value === option.value)}
+              onChange={() => toggleOption(option.value)}
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default MultiCheck;
